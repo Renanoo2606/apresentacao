@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GDPR, LGPD e o Impacto na IoT - Apresentação Interativa</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .slide-container {
+            width: 100vw;
+            height: 100vh;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transition: opacity 0.8s ease;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            visibility: hidden;
+            overflow-y: auto; /* Permite rolagem vertical quando necessário */
+        }
+        
+        .slide.active {
+            opacity: 1;
+            visibility: visible;
+            z-index: 1;
+        }
+        
+        .title-accent {
+            background: linear-gradient(90deg, #3a7bd5, #00d2ff);
+            height: 10px;
+            width: 150px;
+            margin-bottom: 25px;
+        }
+        
+        .tech-pattern {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 600px;
+            height: 600px;
+            background-image: radial-gradient(#3a7bd5 2px, transparent 2px);
+            background-size: 30px 30px;
+            opacity: 0.1;
+            z-index: 0;
+        }
+        
+        .navigation {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 20px;
+            z-index: 100;
+        }
+        
+        .nav-btn {
+            background: rgba(58, 123, 213, 0.8);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 20px;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-btn:hover {
+            background: rgba(58, 123, 213, 1);
+            transform: scale(1.1);
+        }
+        
+        .slide-indicator {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 14px;
+            z-index: 100;
+        }
+        
+        .presentation-mode-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(58, 123, 213, 0.8);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 15px;
+            cursor: pointer;
+            z-index: 100;
+            transition: all 0.3s ease;
+        }
+        
+        .presentation-mode-btn:hover {
+            background: rgba(58, 123, 213, 1);
+        }
+        
+
+        
+        .fullscreen .slide {
+            padding: 2rem;
+            overflow-y: auto;
+            max-height: 100vh;
+        }
+        
+        .fullscreen .slide-content {
+            max-width: 95%;
+            margin: 0 auto;
+        }
+        
+        .timeline-item {
+            position: relative;
+            padding-left: 45px;
+        }
+        
+        .timeline-item:before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 12px;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #3a7bd5;
+        }
+        
+        .timeline-item:after {
+            content: '';
+            position: absolute;
+            left: 8px;
+            top: 35px;
+            width: 3px;
+            height: calc(100% - 30px);
+            background: #3a7bd5;
+        }
+        
+        .timeline-item:last-child:after {
+            display: none;
+        }
+        
+        .data-icon {
+            width: 90px;
+            height: 90px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #3a7bd5, #00d2ff);
+            color: white;
+            font-size: 36px;
+            margin-right: 30px;
+        }
+        
+        .comparison-table th {
+            background-color: #3a7bd5;
+            color: white;
+            padding: 18px;
+            text-align: center;
+            font-size: 24px;
+        }
+        
+        .comparison-table td {
+            padding: 18px;
+            text-align: center;
+            font-size: 20px;
+        }
+        
+        .comparison-table tr:nth-child(even) {
+            background-color: #f0f4f8;
+        }
+        
+        .comparison-table tr:nth-child(odd) {
+            background-color: #ffffff;
+        }
+        
+        .challenge-box {
+            border-left: 6px solid #3a7bd5;
+            padding-left: 24px;
+            margin-bottom: 24px;
+        }
+        
+        .step-box {
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 24px;
+            position: relative;
+            padding-left: 80px;
+        }
+        
+        .step-number {
+            position: absolute;
+            left: 20px;
+            top: 20px;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: #3a7bd5;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 24px;
+        }
+        
+        /* Ajustes para garantir que todo o conteúdo seja visível */
+        .slide-content {
+            width: 100%;
+            max-width: 1800px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 10;
+        }
+        
+        .flex-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .flex-item {
+            flex: 1 1 45%;
+            min-width: 300px;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 350px;
+            width: 100%;
+        }
+        
+        @media (max-width: 768px) {
+            .slide {
+                padding: 1rem;
+            }
+            
+            .title-accent {
+                height: 6px;
+                width: 80px;
+                margin-bottom: 15px;
+            }
+            
+            h1 {
+                font-size: 1.8rem !important;
+            }
+            
+            h2 {
+                font-size: 1.5rem !important;
+            }
+            
+            p {
+                font-size: 1rem !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="slide-container" id="presentation-container">
+        <!-- Slide 1: Título -->
+        <div class="slide active" id="slide-1">
+            <div class="tech-pattern"></div>
+            
+            <div class="slide-content">
+                <div class="z-10 text-center mb-16">
+                    <div class="title-accent mx-auto"></div>
+                    <h1 class="text-7xl font-bold mb-8 text-blue-800">GDPR, LGPD e o Impacto na Internet das Coisas (IoT)</h1>
+                    <p class="text-3xl text-gray-600 mb-14">Uma análise técnica sobre regulamentações de dados e suas implicações</p>
+                </div>
+                
+                <div class="flex justify-center items-center space-x-20 mb-20 z-10">
+                    <img src="images/gdpr_logo.png" alt="GDPR Logo" style="height: 180px; width: auto;">
+                    <img src="images/lgpd_logo.png" alt="LGPD Logo" style="height: 180px; width: auto;">
+                    <img src="images/iot_icon.png" alt="IoT Icon" style="height: 180px; width: auto;">
+                </div>
+                
+                <div class="text-center mt-10 z-10">
+                    <p class="text-2xl">Bernardo Renner e Renan Soares</p>
+                    <p class="text-2xl mt-3">Disciplina: Internet das Coisas</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Slide 2: O que é o GDPR? -->
+        <div class="slide" id="slide-2">
+            <div class="tech-pattern"></div>
+            
+            <div class="slide-content">
+                <div class="z-10">
+                    <div class="title-accent"></div>
+                    <h1 class="text-6xl font-bold mb-12 text-blue-800">O que é o GDPR?</h1>
+                </div>
+                
+                <div class="flex-container z-10">
+                    <div class="flex-item">
+                        <div class="bg-white rounded-lg shadow-lg p-10 mb-10">
+                            <h2 class="text-4xl font-semibold mb-6 text-blue-700">Definição</h2>
+                            <p class="text-2xl">O GDPR (Regulamento Geral de Proteção de Dados da União Europeia) é um regulamento europeu instaurado em 2016 que prevê a proteção da pessoa física no que se refere ao processamento de dados pessoais e à livre circulação desses dados.</p>
+                        </div>
+                        
+                        <div class="bg-white rounded-lg shadow-lg p-10">
+                            <h2 class="text-4xl font-semibold mb-6 text-blue-700">Objetivo Principal</h2>
+                            <p class="text-2xl">Unificar e padronizar, no cenário da União Europeia, as diferentes regras que regem o processamento de dados pessoais, determinando definitivamente os métodos pelos quais os dados e informações devem ser armazenados, protegidos e disponibilizados pelas empresas.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex-item">
+                        <div class="bg-blue-50 rounded-lg shadow-lg p-10">
+                            <h2 class="text-4xl font-semibold mb-6 text-blue-700">Contexto Histórico</h2>
+                            
+                            <div class="timeline-item pb-10">
+                                <p class="font-semibold text-2xl">1995</p>
+                                <p class="text-xl mt-2">Diretiva Europeia sobre a Proteção de Dados Pessoais (Diretiva 95/46/CE)</p>
+                            </div>
+                            
+                            <div class="timeline-item pb-10">
+                                <p class="font-semibold text-2xl">2003</p>
+                                <p class="text-xl mt-2">Código de Proteção de Dados Pessoais (Decreto Legislativo 196/2003)</p>
+                            </div>
+                            
+                            <div class="timeline-item pb-10">
+                                <p class="font-semibold text-2xl">2016</p>
+                                <p class="text-xl mt-2">Instauração do GDPR, substituindo a Diretiva 95/46/CE</p>
+                            </div>
+                            
+                            <div class="timeline-item">
+                                <p class="font-semibold text-2xl">Atualmente</p>
+                                <p class="text-xl mt-2">Revogação de regras contraditórias estabelecidas anteriormente</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Slide 3: Dados Pessoais e Princípios Fundamentais -->
+        <div class="slide" id="slide-3">
+            <div class="tech-pattern"></div>
+            
+            <div class="slide-content">
+                <div class="z-10">
+                    <div class="title-accent"></div>
+                    <h1 class="text-6xl font-bold mb-12 text-blue-800">Dados Pessoais e Princípios Fundamentais</h1>
+                </div>
+                
+                <div class="flex-container z-10">
+                    <div class="flex-item">
+                        <div class="bg-white rounded-lg shadow-lg p-10 mb-10">
+                            <h2 class="text-4xl font-semibold mb-6 text-blue-700">O que são Dados Pessoais?</h2>
+                            <p class="text-2xl mb-6">Segundo a Comissão Europeia, os dados pessoais podem ser considerados como quaisquer informações perante um indivíduo, relacionadas tanto à sua:</p>
+                            
+                            <div class="flex items-center mb-5">
+                                <div class="data-icon">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <p class="text-2xl">Vida privada</p>
+                            </div>
+                            
+                            <div class="flex items-center mb-5">
+                                <div class="data-icon">
+                                    <i class="fas fa-briefcase"></i>
+                                </div>
+                                <p class="text-2xl">Vida profissional</p>
+                            </div>
+                            
+                            <div class="flex items-center">
+                                <div class="data-icon">
+                                    <i class="fas fa-globe"></i>
+                                </div>
+                                <p class="text-2xl">Vida pública</p>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-blue-50 rounded-lg shadow-lg p-10">
+                            <h2 class="text-4xl font-semibold mb-6 text-blue-700">Exemplos de Dados Pessoais</h2>
+                            <div class="grid grid-cols-2 gap-6">
+                                <div class="bg-white p-5 rounded shadow">
+                                    <i class="fas fa-id-card text-blue-600 mr-3 text-2xl"></i> <span class="text-xl">Nomes</span>
+                                </div>
+                                <div class="bg-white p-5 rounded shadow">
+                                    <i class="fas fa-map-marker-alt text-blue-600 mr-3 text-2xl"></i> <span class="text-xl">Endereços</span>
+                                </div>
+                                <div class="bg-white p-5 rounded shadow">
+                                    <i class="fas fa-envelope text-blue-600 mr-3 text-2xl"></i> <span class="text-xl">E-mails</span>
+                                </div>
+                                <div class="bg-white p-5 rounded shadow">
+                                    <i class="fas fa-credit-card text-blue-600 mr-3 text-2xl"></i> <span class="text-xl">Dados bancários</span>
+                                </div>
+                                <div class="bg-white p-5 rounded shadow">
+                                    <i class="fas fa-comment text-blue-600 mr-3 text-2xl"></i> <span class="text-xl">Postagens</span>
+                                </div>
+                                <div class="bg-white p-5 rounded shadow">
+                                    <i class="fas fa-ellipsis-h text-blue-600 mr-3 text-2xl"></i> <span class="text-xl">Outros</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex-item">
+                        <div class="bg-white rounded-lg shadow-lg p-10">
+                            <div class="flex items-center mb-8">
+                                <img src="images/data_protection.png" alt="Proteção de Dados" style="height: 120px; width: auto;" class="mr-6">
+                                <h2 class="text-4xl font-semibold text-blue-700">GDPR como Norma Padrão</h2>
+                            </div>
+                            
+                            <p class="text-2xl mb-8">O GDPR serve como norma padrão para empresas que manuseiam dados pessoais, abordando áreas como:</p>
+                            
+                            <div class="bg-blue-50 p-6 rounded-lg mb-8">
+                                <h3 class="font-semibold text-3xl mb-3 text-blue-700">Processos e Regras</h3>
+                                <p class="text-xl">Sistematização com ações detalhadas para garantir conformidade com os princípios estabelecidos.</p>
+                            </div>
+                            
+                            <div class="bg-blue-50 p-6 rounded-lg mb-8">
+                                <h3 class="font-semibold text-3xl mb-3 text-blue-700">Tecnologia e Ferramentas</h3>
+                                <p class="text-xl">Implementação de soluções técnicas para proteção e gerenciamento adequado dos dados.</p>
+                            </div>
+                            
+                            <div class="bg-blue-100 p-6 rounded-lg border-l-4 border-blue-600">
+                                <h3 class="font-semibold text-3xl mb-3 text-blue-700">Foco Principal</h3>
+                                <p class="text-2xl">Integridade e privacidade do indivíduo, regendo as atitudes do manuseador de dados para garantir conformidade.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Slide 4: GDPR e LGPD: Semelhanças e Diferenças -->
+        <div class="slide" id="slide-4">
+            <div class="tech-pattern"></div>
+            
+            <div class="slide-content">
+                <div class="z-10">
+                    <div class="title-accent"></div>
+                    <h1 class="text-6xl font-bold mb-12 text-blue-800">GDPR e LGPD: Semelhanças e Diferenças</h1>
+                </div>
+                
+                <div class="flex justify-center items-center space-x-20 mb-12 z-10">
+                    <div class="flex flex-col items-center">
+                        <img src="images/gdpr_logo.png" alt="GDPR Logo" style="height: 150px; width: auto;">
+                        <p class="text-3xl font-semibold mt-4 text-blue-700">União Europeia</p>
+                    </div>
+                    
+                    <div class="flex flex-col items-center">
+                        <img src="images/lgpd_logo.png" alt="LGPD Logo" style="height: 150px; width: auto;">
+                        <p class="text-3xl font-semibold mt-4 text-blue-700">Brasil</p>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-lg shadow-lg p-10 mb-10 z-10">
+                    <h2 class="text-4xl font-semibold mb-6 text-blue-700">Objetivo Comum</h2>
+                    <p class="text-2xl">Ambos os regulamentos zelam igualmente pela integridade e confidencialidade de informações dos usuários, garantindo a proteção de dados pessoais e estabelecendo regras para seu tratamento.</p>
+                </div>
+                
+                <div class="z-10 overflow-x-auto">
+                    <table class="comparison-table w-full border-collapse shadow-lg rounded-lg overflow-hidden">
+                        <thead>
+                            <tr>
+                                <th class="w-1/4">Aspecto</th>
+                                <th class="w-3/8">GDPR</th>
+                                <th class="w-3/8">LGPD</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="font-semibold">Escopo Territorial</td>
+                                <td>União Europeia</td>
+                                <td>Brasil</td>
+                            </tr>
+                            <tr>
+                                <td class="font-semibold">Dados Específicos</td>
+                                <td>Orientação sexual, convicções religiosas</td>
+                                <td>Saúde, dados biométricos</td>
+                            </tr>
+                            <tr>
+                                <td class="font-semibold">Implementação</td>
+                                <td>2016</td>
+                                <td>2018 (vigência completa em 2020)</td>
+                            </tr>
+                            <tr>
+                                <td class="font-semibold">Missão Principal</td>
+                                <td colspan="2" class="bg-blue-50">Proteção de dados pessoais e garantia de privacidade</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Slide 5: IoT em um Cenário Global Regulado -->
+        <div class="slide" id="slide-5">
+            <div class="tech-pattern"></div>
+            
+            <div class="slide-content">
+                <div class="z-10">
+                    <div class="title-accent"></div>
+                    <h1 class="text-6xl font-bold mb-12 text-blue-800">IoT em um Cenário Global Regulado</h1>
+                </div>
+                
+                <div class="flex-container z-10">
+                    <div class="flex-item">
+                        <div class="bg-white rounded-lg shadow-lg p-10 mb-10">
+                            <div class="flex items-center mb-6">
+                                <img src="images/global_data.png" alt="Dados Globais" style="height: 120px; width: auto;" class="mr-6">
+                                <h2 class="text-4xl font-semibold text-blue-700">Desafio Principal</h2>
+                            </div>
+                            
+                            <p class="text-2xl mb-8">A propagação e aplicação da Internet das Coisas em amplitude global enfrenta desafios devido às diferentes legislações territoriais de proteção de dados.</p>
+                            
+                            <div class="challenge-box">
+                                <h3 class="font-semibold text-3xl mb-3 text-blue-700">Transferências Internacionais</h3>
+                                <p class="text-xl">Dispositivos IoT frequentemente transferem dados entre diferentes jurisdições, cada uma com suas próprias regras de proteção (GDPR/LGPD).</p>
+                            </div>
+                            
+                            <div class="challenge-box">
+                                <h3 class="font-semibold text-3xl mb-3 text-blue-700">Coleta Contínua</h3>
+                                <p class="text-xl">Dispositivos IoT coletam dados constantemente, muitas vezes sem intervenção direta do usuário, exigindo conformidade automática.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-blue-50 rounded-lg shadow-lg p-10">
+                            <h2 class="text-4xl font-semibold mb-6 text-blue-700">Impacto no Desenvolvimento</h2>
+                            <p class="text-2xl">Para operar globalmente, aplicações IoT precisam ser projetadas considerando os requisitos mais rigorosos de todas as jurisdições relevantes, aumentando a complexidade e os custos de desenvolvimento.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex-item">
+                        <div class="bg-white rounded-lg shadow-lg p-10">
+                            <h2 class="text-4xl font-semibold mb-8 text-blue-700">Necessidade de Conformidade</h2>
+                            
+                            <div class="chart-container">
+                                <canvas id="complianceChart"></canvas>
+                            </div>
+                            
+                            <div class="mt-10">
+                                <h3 class="font-semibold text-3xl mb-6 text-blue-700">Adequação às Especificidades</h3>
+                                <p class="text-2xl">Aplicações IoT devem se adequar às especificidades de manuseio, valorização e integração de dados de cada escopo territorial, considerando:</p>
+                                
+                                <div class="grid grid-cols-2 gap-6 mt-6">
+                                    <div class="bg-blue-50 p-5 rounded shadow">
+                                        <i class="fas fa-shield-alt text-blue-600 mr-3 text-2xl"></i> <span class="text-xl">Proteção de dados</span>
+                                    </div>
+                                    <div class="bg-blue-50 p-5 rounded shadow">
+                                        <i class="fas fa-user-lock text-blue-600 mr-3 text-2xl"></i> <span class="text-xl">Privacidade</span>
+                                    </div>
+                                    <div class="bg-blue-50 p-5 rounded shadow">
+                                        <i class="fas fa-gavel text-blue-600 mr-3 text-2xl"></i> <span class="text-xl">Penalidades</span>
+                                    </div>
+                                    <div class="bg-blue-50 p-5 rounded shadow">
+                                        <i class="fas fa-child text-blue-600 mr-3 text-2xl"></i> <span class="text-xl">Idades mínimas</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Slide 6: Conformidade e Futuro da IoT -->
+        <div class="slide" id="slide-6">
+            <div class="tech-pattern"></div>
+            
+            <div class="slide-content">
+                <div class="z-10">
+                    <div class="title-accent"></div>
+                    <h1 class="text-6xl font-bold mb-12 text-blue-800">Conformidade e Futuro da IoT</h1>
+                </div>
+                
+                <div class="flex-container z-10">
+                    <div class="flex-item">
+                        <div class="bg-white rounded-lg shadow-lg p-10">
+                            <h2 class="text-4xl font-semibold mb-8 text-blue-700">Ações Necessárias</h2>
+                            
+                            <div class="step-box bg-blue-50">
+                                <div class="step-number">1</div>
+                                <h3 class="font-semibold text-2xl mb-3">Aplicar Penalidades</h3>
+                                <p class="text-xl">Implementar sistemas que apliquem penalidades conforme contextos regulamentados de cada território.</p>
+                            </div>
+                            
+                            <div class="step-box bg-blue-50">
+                                <div class="step-number">2</div>
+                                <h3 class="font-semibold text-2xl mb-3">Respeitar Idades Mínimas</h3>
+                                <p class="text-xl">Considerar as diferentes idades mínimas para consentimento em cada jurisdição.</p>
+                            </div>
+                            
+                            <div class="step-box bg-blue-50">
+                                <div class="step-number">3</div>
+                                <h3 class="font-semibold text-2xl mb-3">Adaptar Interfaces</h3>
+                                <p class="text-xl">Desenvolver interfaces que se adaptem às exigências legais de cada região.</p>
+                            </div>
+                            
+                            <div class="step-box bg-blue-50">
+                                <div class="step-number">4</div>
+                                <h3 class="font-semibold text-2xl mb-3">Documentar Conformidade</h3>
+                                <p class="text-xl">Manter registros detalhados de conformidade com cada regulamento aplicável.</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex-item">
+                        <div class="bg-white rounded-lg shadow-lg p-10 mb-10">
+                            <div class="flex items-center mb-6">
+                                <img src="images/iot_icon.png" alt="IoT Icon" style="height: 120px; width: auto;" class="mr-6">
+                                <h2 class="text-4xl font-semibold text-blue-700">Importância da Conformidade</h2>
+                            </div>
+                            
+                            <p class="text-2xl mb-8">A conformidade com as regulamentações de proteção de dados é fundamental para a plena inserção e aceitação da IoT no paradigma global, garantindo:</p>
+                            
+                            <div class="grid grid-cols-2 gap-6">
+                                <div class="bg-blue-50 p-6 rounded shadow text-center">
+                                    <i class="fas fa-lock text-blue-600 text-4xl mb-3"></i>
+                                    <p class="font-semibold text-xl">Segurança</p>
+                                </div>
+                                <div class="bg-blue-50 p-6 rounded shadow text-center">
+                                    <i class="fas fa-user-shield text-blue-600 text-4xl mb-3"></i>
+                                    <p class="font-semibold text-xl">Privacidade</p>
+                                </div>
+                                <div class="bg-blue-50 p-6 rounded shadow text-center">
+                                    <i class="fas fa-handshake text-blue-600 text-4xl mb-3"></i>
+                                    <p class="font-semibold text-xl">Confiança</p>
+                                </div>
+                                <div class="bg-blue-50 p-6 rounded shadow text-center">
+                                    <i class="fas fa-globe text-blue-600 text-4xl mb-3"></i>
+                                    <p class="font-semibold text-xl">Alcance Global</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-blue-700 rounded-lg shadow-lg p-10 text-white">
+                            <h2 class="text-3xl font-semibold mb-6">Mensagem Final</h2>
+                            <p class="text-2xl">A conformidade regulatória (GDPR, LGPD, etc.) não é apenas uma obrigação legal, mas um componente essencial para o desenvolvimento responsável e sustentável da Internet das Coisas em escala global.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Navegação -->
+        <div class="navigation">
+            <button class="nav-btn" id="prev-btn"><i class="fas fa-chevron-left"></i></button>
+            <button class="nav-btn" id="next-btn"><i class="fas fa-chevron-right"></i></button>
+        </div>
+        
+        <div class="slide-indicator" id="slide-indicator">1/6</div>
+        
+        <button class="presentation-mode-btn" id="presentation-mode-btn">
+            <i class="fas fa-expand"></i> Modo Apresentação
+        </button>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Variáveis
+            const slides = document.querySelectorAll('.slide');
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            const slideIndicator = document.getElementById('slide-indicator');
+            const presentationModeBtn = document.getElementById('presentation-mode-btn');
+            const presentationContainer = document.getElementById('presentation-container');
+            let currentSlide = 0;
+            let isFullscreen = false;
+            
+            // Inicializar o gráfico de radar no slide 5
+            const ctx = document.getElementById('complianceChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: ['Proteção de Dados', 'Consentimento', 'Transparência', 'Segurança', 'Direitos do Usuário', 'Penalidades'],
+                    datasets: [{
+                        label: 'GDPR (UE)',
+                        data: [95, 90, 85, 90, 95, 100],
+                        backgroundColor: 'rgba(58, 123, 213, 0.2)',
+                        borderColor: 'rgba(58, 123, 213, 1)',
+                        pointBackgroundColor: 'rgba(58, 123, 213, 1)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgba(58, 123, 213, 1)'
+                    }, {
+                        label: 'LGPD (Brasil)',
+                        data: [90, 85, 80, 85, 90, 85],
+                        backgroundColor: 'rgba(0, 210, 255, 0.2)',
+                        borderColor: 'rgba(0, 210, 255, 1)',
+                        pointBackgroundColor: 'rgba(0, 210, 255, 1)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgba(0, 210, 255, 1)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            angleLines: {
+                                display: true
+                            },
+                            suggestedMin: 50,
+                            suggestedMax: 100
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            labels: {
+                                font: {
+                                    size: 18
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Função para mostrar slide
+            function showSlide(index) {
+                // Esconder todos os slides
+                slides.forEach(slide => {
+                    slide.classList.remove('active');
+                });
+                
+                // Mostrar o slide atual
+                slides[index].classList.add('active');
+                
+                // Atualizar indicador de slide
+                slideIndicator.textContent = `${index + 1}/${slides.length}`;
+                
+                // Atualizar estado dos botões
+                prevBtn.style.opacity = index === 0 ? '0.5' : '1';
+                nextBtn.style.opacity = index === slides.length - 1 ? '0.5' : '1';
+            }
+            
+            // Função para ir para o próximo slide
+            function nextSlide() {
+                if (currentSlide < slides.length - 1) {
+                    currentSlide++;
+                    showSlide(currentSlide);
+                }
+            }
+            
+            // Função para ir para o slide anterior
+            function prevSlide() {
+                if (currentSlide > 0) {
+                    currentSlide--;
+                    showSlide(currentSlide);
+                }
+            }
+            
+            // Função para alternar modo de apresentação
+            function togglePresentationMode() {
+                if (!isFullscreen) {
+                    if (presentationContainer.requestFullscreen) {
+                        presentationContainer.requestFullscreen();
+                    } else if (presentationContainer.mozRequestFullScreen) {
+                        presentationContainer.mozRequestFullScreen();
+                    } else if (presentationContainer.webkitRequestFullscreen) {
+                        presentationContainer.webkitRequestFullscreen();
+                    } else if (presentationContainer.msRequestFullscreen) {
+                        presentationContainer.msRequestFullscreen();
+                    }
+                    presentationContainer.classList.add('fullscreen');
+                    presentationModeBtn.style.display = 'none'; 
+                    isFullscreen = true;
+                } else {
+                    if (document.exitFullscreen) {
+                        document.exitFullscreen();
+                    } else if (document.mozCancelFullScreen) {
+                        document.mozCancelFullScreen();
+                    } else if (document.webkitExitFullscreen) {
+                        document.webkitExitFullscreen();
+                    } else if (document.msExitFullscreen) {
+                        document.msExitFullscreen();
+                    }
+                    presentationContainer.classList.remove('fullscreen');
+                    presentationModeBtn.innerHTML = '<i class="fas fa-expand"></i> Modo Apresentação';
+                    isFullscreen = false;
+                }
+            }
+            
+            // Event listeners
+            prevBtn.addEventListener('click', prevSlide);
+            nextBtn.addEventListener('click', nextSlide);
+            presentationModeBtn.addEventListener('click', togglePresentationMode);
+            
+            // Navegação com teclado
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+                    nextSlide();
+                } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+                    prevSlide();
+                } else if (e.key === 'f' || e.key === 'F') {
+                    togglePresentationMode();
+                }
+            });
+            
+            // Evento para detectar saída do modo fullscreen
+            document.addEventListener('fullscreenchange', function() {
+                if (!document.fullscreenElement) {
+                    presentationContainer.classList.remove('fullscreen');
+                    presentationModeBtn.style.display = 'inline-block'; // <<< MOSTRA O BOTÃO DE NOVO
+                    presentationModeBtn.innerHTML = '<i class="fas fa-expand"></i> Modo Apresentação';
+                    isFullscreen = false;
+                }
+            });
+            
+            // Inicializar
+            showSlide(currentSlide);
+        });
+    </script>
+</body>
+</html>
